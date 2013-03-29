@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+	<head>
+		<meta charset="utf-8" />
+
+		<!-- Set the viewport width to device width for mobile -->
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="description" content="Work on your memorizing skills">
+		<meta name="author" content="Erik Sundell">
+
+		<title>Speed Mind - Practice your memory</title>
+		<link href="css/bootstrap-combined.min.css" rel="stylesheet" media="screen">
+		<style>
+			.cboxLabel {
+				margin-right: 7px;
+				display: inline;
+			}
+
+			.navbar-contracted {
+				height: 0px;
+			}
+
+			.faded-out {
+				zoom: 1;
+				filter: alpha(opacity=50);
+				opacity: 0.5;
+			}
+		</style>
+		<style>
+			/* Special grid styles
+			-------------------------------------------------- */
+			.show-grid {
+			  margin-top: 10px;
+			  margin-bottom: 20px;
+			}
+			.show-grid [class*="span"] {
+			  background-color: #eee;
+			  text-align: center;
+			  -webkit-border-radius: 3px;
+			     -moz-border-radius: 3px;
+			          border-radius: 3px;
+			  min-height: 40px;
+			  line-height: 40px;
+			}
+			.show-grid [class*="span"]:hover {
+			  background-color: #ddd;
+			}
+			.show-grid .show-grid {
+			  margin-top: 0;
+			  margin-bottom: 0;
+			}
+			.show-grid .show-grid [class*="span"] {
+			  margin-top: 5px;
+			}
+			.show-grid [class*="span"] [class*="span"] {
+			  background-color: #ccc;
+			}
+			.show-grid [class*="span"] [class*="span"] [class*="span"] {
+			  background-color: #999;
+			}
+		</style>
+
+		<!-- Libraries -->
+		<script src="libs/jquery/jquery.js"></script>
+		<script src="libs/bootstrap/bootstrap.js"></script>
+		<script src="libs/handlebars/handlebars.js"></script>
+		<script src="libs/ember/ember.js"></script>
+		<script src="libs/ember/ember-data.js"></script>
+
+		<!-- Application -->
+		<script src="app/app.js"></script>
+		<!--
+			<script src="app/app.js"></script>
+			<script src="app/util.js"></script>
+			<script src="app/router.js"></script>
+			<script src="app/model.js"></script>
+			<script src="app/model-fixture.js"></script>
+			<script src="app/view.js"></script>
+			<script src="app/controller.js"></script> -->
+	</head>
+	<body>
+		<audio id="beep">
+			<source src="res/audio/beep.mp3" type="audio/mpeg" />
+			<source src="res/audio/beep.ogg" type="audio/ogg" />
+		</audio>
+
+		<!-- ****************************************************
+		* APPLICATION - Main template
+		*********************************************************
+			TODO:
+		***************************************************** -->
+		<script type="text/x-handlebars" data-template-name="application">
+			<div class="container" style="opacity: 50%">
+				<div id="navbar" class="row-fluid navbar">
+					<div class="navbar-inner">
+					    <a class="brand" href="#">Speed</a>
+					    <ul class="nav">
+						    <li>{{#linkTo lists}}Lists{{/linkTo}}</li>
+					    </ul>
+					</div>
+				</div>
+				{{ outlet }}
+			</div>
+		</script>
+
+
+
+		<!-- ****************************************************
+		* INDEX - '/'
+		*********************************************************
+			TODO: 
+		***************************************************** -->
+		<script type="text/x-handlebars" data-template-name="index">
+			<legend>Speed Mind</legend>
+			<ul>
+				<li>Practice memorizing lists</li>
+			</ul>
+		</script>
+
+
+
+		<!-- ****************************************************
+		* LISTS/INDEX - '/lists'
+		*********************************************************
+			TODO: 
+		***************************************************** -->
+		<script type="text/x-handlebars" data-template-name="lists/index">
+			<legend>Lists available</legend>
+			{{#if hasData}}
+				<table class="table table-hover table-condensed">
+					<thead>
+						<tr>
+							<th class="hidden-phone">#</th>
+							<th>Name</th>
+							<th class="hidden-phone">Description</th>
+							<th>1st Item</th>
+							<th>Length</th>
+						</tr>
+					</thead>
+					<tbody>
+						{{#each list in controller}}
+							<tr>
+								<td class="hidden-phone">{{ list.id }}</td>
+								<td>{{#linkTo lists.list list}}{{ list.name }}{{/linkTo}}</td>
+								<td class="hidden-phone">{{ list.desc }}</td>
+								<td>{{ list.items.firstObject.imgText }}</td>
+								<td>{{ list.items.length }}</td>
+							</tr>
+						{{/each}}
+					</tbody>
+				</table>
+			{{else}}
+				<p>Loading...</p>
+			{{/if}}
+		</script>
+
+
+
+		<!-- ****************************************************
+		* LISTS/LIST - '/lists/:list_id'
+		*********************************************************
+			TODO:
+		***************************************************** -->
+		<script type="text/x-handlebars" data-template-name="lists/list">
+			<div class="row-fluid show-grid hidden-phone">
+				<div class="span12">
+					<legend>{{controller.name}}</legend>
+				</div>
+			</div>
+
+			{{#if controller.isDuo}}
+			<div class="row-fluid show-grid important">
+				<div class="offset3 span3"><h2>{{controller.currentItem.text}}</h2></div>
+				<div class="span3"><h2>{{controller.currentItem.imgText}}</h2></div>
+			</div>
+			{{else}}
+			<div class="row-fluid show-grid important">
+				<div class="span12"><h2>{{controller.soloItem}}</h2></div>
+			</div>
+			{{/if}}
+
+			<div class="row-fluid show-grid hidden-phone">
+				<div class="span8">
+					<legend>Control and Settings</legend>
+				</div>
+				<div class="span4">
+					<legend>Status</legend>
+				</div>
+			</div>
+			<div class="row-fluid show-grid important">
+				<div class="span4">
+					<button class="btn important" {{action startPause}}>{{#if controller.timer.running}}Pause{{else}}Start{{/if}}</button>
+					<button {{bindAttr class=":btn controller.timer.running::disabled"}} {{action stop}}>Stop</button>
+					{{view App.TextField disabledBinding="App.listsListController.timer.running" valueBinding="controller.interval" id="interval"}}
+					<label class="control-label" for="interval" style="display: inline">ms</label>
+				</div>
+				<div class="span4 not-important">
+					<div>
+						<label class="checkboxLabel cboxLabel" for="repeat">
+							{{view App.Checkbox checkedBinding="controller.repeat" id="repeat"}}
+							Repeat
+						</label>
+						<label class="checkboxLabel cboxLabel" for="shuffle">
+							{{view App.Checkbox checkedBinding="controller.shuffle" id="shuffle" }}
+							Shuffle
+						</label>
+						<label class="checkboxLabel cboxLabel" for="beepId">
+							{{view App.Checkbox checkedBinding="controller.beep" id="beepId" }}
+							Beep
+						</label>
+					</div>
+					<div>
+						<label class="checkboxLabel cboxLabel" for="show1">
+							{{view App.Checkbox disabledBinding="App.listsListController.currentItem.isSolo" checkedBinding="controller.show1" id="show1"}}
+							Show Item 1
+						</label>
+						<label class="checkboxLabel cboxLabel" for="show2">
+							{{view App.Checkbox disabledBinding="App.listsListController.currentItem.isSolo" checkedBinding="controller.show2" id="show2"}}
+							Show Item 2
+						</label>
+					</div>
+				</div>
+				<div class="span4 hidden-phone not-important">
+					<div style="width: 50%; float:left">Status: {{timer.state}}</div>
+					<div style="width: 50%; float:left">Item: {{controller.currentItemNumber}}/{{controller.length}}</div>
+				</div>
+			</div>
+		</script>
+	</body>
+</html>
